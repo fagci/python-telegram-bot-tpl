@@ -13,6 +13,7 @@ class BotUser(db.Entity):
     last_name = Optional(str)
     created_at = Required(datetime, default=datetime.utcnow())
     updated_at = Required(datetime, default=datetime.utcnow())
+    alive = Required(bool, default=True)
 
     @property
     def full_name(self):
@@ -26,7 +27,7 @@ class BotUser(db.Entity):
     def __str__(self):
         return self.full_name
 
-    @db_session
+    @staticmethod
     def from_user(user):
         try:
             u = BotUser[user.id]
@@ -41,14 +42,18 @@ class BotUser(db.Entity):
         return u
 
     @classmethod
-    @db_session
     def count(cls):
         return cls.select().count()
 
     @classmethod
-    @db_session
     def last_created(cls):
         return cls.select().order_by(lambda u: desc(u.created_at)).first()
+
+    def start(self):
+        self.alive = True
+
+    def stop(self):
+        self.alive = False
 
 
 db.bind(provider='sqlite', filename='db.sqlite', create_db=True)
